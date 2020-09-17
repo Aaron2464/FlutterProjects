@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import 'constant.dart';
+import '../constant.dart';
 
 class IconContent extends StatelessWidget {
   IconContent({this.icon, this.label});
