@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:bitcoin_ticker/coin_data.dart';
+import 'package:bitcoin_ticker/networking.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -11,6 +12,13 @@ class PriceScreen extends StatefulWidget {
 
 class _PriceScreenState extends State<PriceScreen> {
   String selectedCurrency = 'USD';
+  String rate = "?";
+
+  @override
+  void initState() {
+    super.initState();
+    getData(selectedCurrency);
+  }
 
   DropdownButton<String> androidDropdown() {
     List<DropdownMenuItem<String>> dropdownItems = [];
@@ -26,10 +34,7 @@ class _PriceScreenState extends State<PriceScreen> {
       value: selectedCurrency,
       items: dropdownItems,
       onChanged: (value) {
-        setState(() {
-          selectedCurrency = value;
-        });
-        print(value);
+        getData(value);
       },
     );
   }
@@ -43,7 +48,9 @@ class _PriceScreenState extends State<PriceScreen> {
     return CupertinoPicker(
       backgroundColor: Colors.lightBlue,
       itemExtent: 32.0,
-      onSelectedItemChanged: (selectedIndex) {},
+      onSelectedItemChanged: (selectedIndex) {
+        getData(pickerItems[selectedIndex].data);
+      },
       children: pickerItems,
     );
   }
@@ -77,7 +84,7 @@ class _PriceScreenState extends State<PriceScreen> {
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
                 child: Text(
-                  '1 BTC = ? USD',
+                  '1 BTC = $rate $selectedCurrency',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20.0,
@@ -96,5 +103,16 @@ class _PriceScreenState extends State<PriceScreen> {
         ],
       ),
     );
+  }
+
+  void getData(String value) async {
+    var coin = await CoinData().getCoin('BTC', value);
+
+    setState(() {
+      selectedCurrency = value;
+      if (coin == null) return;
+      rate = coin['rate'].round().toString();
+      // rate = coin['rate'].toStringAsFixer(0);
+    });
   }
 }
