@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:bitcoin_ticker/coin_data.dart';
-import 'package:bitcoin_ticker/networking.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -12,7 +11,9 @@ class PriceScreen extends StatefulWidget {
 
 class _PriceScreenState extends State<PriceScreen> {
   String selectedCurrency = 'USD';
-  String rate = "?";
+  String btcRate = "?";
+  String ethRate = "?";
+  String ltcRate = "?";
 
   @override
   void initState() {
@@ -75,23 +76,22 @@ class _PriceScreenState extends State<PriceScreen> {
         children: <Widget>[
           Padding(
             padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
-            child: Card(
-              color: Colors.lightBlueAccent,
-              elevation: 5.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
-                child: Text(
-                  '1 BTC = $rate $selectedCurrency',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                CurrencyCard(
+                    crypto: cryptoList[0],
+                    rate: isWaiting ? '?' : coinValue['BTC'],
+                    selectedCurrency: selectedCurrency),
+                CurrencyCard(
+                    crypto: cryptoList[1],
+                    rate: isWaiting ? '?' : coinValue['ETH'],
+                    selectedCurrency: selectedCurrency),
+                CurrencyCard(
+                    crypto: cryptoList[2],
+                    rate: isWaiting ? '?' : coinValue['LTC'],
+                    selectedCurrency: selectedCurrency),
+              ],
             ),
           ),
           Container(
@@ -105,14 +105,52 @@ class _PriceScreenState extends State<PriceScreen> {
     );
   }
 
-  void getData(String value) async {
-    var coin = await CoinData().getCoin('BTC', value);
+  Map<String, String> coinValue = {};
+  bool isWaiting = false;
+  void getData(String selectCurrency) async {
+    isWaiting = true;
+    try {
+      var data = await CoinData().getCoin(selectCurrency);
+      isWaiting = false;
+      setState(() {
+        coinValue = data;
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+}
 
-    setState(() {
-      selectedCurrency = value;
-      if (coin == null) return;
-      rate = coin['rate'].round().toString();
-      // rate = coin['rate'].toStringAsFixer(0);
-    });
+class CurrencyCard extends StatelessWidget {
+  CurrencyCard({
+    @required this.crypto,
+    @required this.rate,
+    @required this.selectedCurrency,
+  });
+
+  final String rate;
+  final String selectedCurrency;
+  final String crypto;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.lightBlueAccent,
+      elevation: 5.0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
+        child: Text(
+          '1 $crypto = $rate $selectedCurrency',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 20.0,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
   }
 }
